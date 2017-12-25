@@ -18,7 +18,6 @@ module Pos.Block.Logic.Internal
        , rollbackBlocksUnsafe
        , BypassSecurityCheck(..)
 
-         -- * Garbage
        , toUpdateBlock
        , toTxpBlock
        , toSscBlock
@@ -38,10 +37,10 @@ import           Pos.Block.Slog (BypassSecurityCheck (..), MonadSlogApply, Monad
                                  ShouldCallBListener, slogApplyBlocks, slogRollbackBlocks)
 import           Pos.Block.Types (Blund, Undo (undoDlg, undoTx, undoUS))
 import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, IsMainHeader,
-                           epochIndexL, gbBody, gbHeader, headerHash, mainBlockTxPayload,
-                           mainBlockUpdatePayload)
+                           UpdateBlock, epochIndexL, gbBody, gbHeader, headerHash,
+                           mainBlockTxPayload, mainBlockUpdatePayload)
 import           Pos.Core.Block (Block, Body, GenesisBlock, MainBlock, MainBlockchain, mbDlgPayload,
-                                 mbSscPayload, mbUpdatePayload)
+                                 mbSscPayload)
 import           Pos.DB (MonadDB, MonadDBRead, MonadGState, SomeBatchOp (..))
 import qualified Pos.DB.GState.Common as GS (writeBatchGState)
 import           Pos.Delegation.Class (MonadDelegation)
@@ -58,7 +57,7 @@ import           Pos.Ssc.Types (SscBlock)
 import           Pos.Txp.MemState (MonadTxpLocal (..))
 import           Pos.Txp.Settings (TxpBlock, TxpBlund, TxpGlobalSettings (..))
 import           Pos.Update.Context (UpdateContext)
-import           Pos.Update.Logic (UpdateBlock, usApplyBlocks, usNormalize, usRollbackBlocks)
+import           Pos.Update.Logic (usApplyBlocks, usNormalize, usRollbackBlocks)
 import           Pos.Update.Poll (PollModifier)
 import           Pos.Util (HasLens', Some (..), spanSafe)
 import           Pos.Util.Chrono (NE, NewestFirst (..), OldestFirst (..))
@@ -226,9 +225,6 @@ rollbackBlocksUnsafe bsc scb toRollback = do
     dlgNormalizeOnRollback
     sanityCheckDB
 
-----------------------------------------------------------------------------
--- Garbage
-----------------------------------------------------------------------------
 
 toComponentBlock :: HasConfiguration => (MainBlock -> payload) -> Block -> ComponentBlock payload
 toComponentBlock fnc block = case block of
