@@ -15,8 +15,8 @@ import qualified Data.HashMap.Strict as HM
 import           System.Wlog (logError)
 import           Universum
 
-import           Pos.Core (EpochIndex, EpochOrSlot (..), HasConfiguration, IsMainHeader,
-                           LocalSlotIndex, SlotCount, SlotId (siSlot), StakeholderId,
+import           Pos.Core (ComponentBlock (..), EpochIndex, EpochOrSlot (..), HasConfiguration,
+                           IsMainHeader, LocalSlotIndex, SlotCount, SlotId (siSlot), StakeholderId,
                            VssCertificate, epochIndexL, epochOrSlot, getEpochOrSlot,
                            getVssCertificatesMap, headerSlotL, mkCoin,
                            mkVssCertificatesMapSingleton, slotSecurityParam)
@@ -90,7 +90,10 @@ applyGenesisBlock epoch = do
 
 -- | Rollback application of 'SscPayload's in 'Toss'. First argument is
 -- 'EpochOrSlot' of oldest block which is subject to rollback.
-rollbackSsc :: (HasConfiguration, MonadToss m) => EpochOrSlot -> NewestFirst [] SscPayload -> m ()
+rollbackSsc :: (HasConfiguration, MonadToss m) =>
+    EpochOrSlot
+    -> NewestFirst [] (ComponentBlock SscPayload)
+    -> m ()
 rollbackSsc oldestEOS (NewestFirst payloads)
     | oldestEOS == toEnum 0 = do
         logError "rollbackSsc: most genesis block is passed to rollback"
@@ -99,7 +102,7 @@ rollbackSsc oldestEOS (NewestFirst payloads)
         resetShares
     | otherwise = do
         setEpochOrSlot (pred oldestEOS)
-        mapM_ rollbackSscDo payloads
+        mapM_ (rollbackSscDo . bcmPayload) payloads
   where
     rollbackSscDo (CommitmentsPayload comms _) =
         mapM_ delCommitment $ HM.keys $ getCommitmentsMap comms

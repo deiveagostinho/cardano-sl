@@ -228,8 +228,8 @@ rollbackBlocksUnsafe bsc scb toRollback = do
 
 toComponentBlock :: HasConfiguration => (MainBlock -> payload) -> Block -> ComponentBlock payload
 toComponentBlock fnc block = case block of
-    Left a  -> ComponentBlockGenesis (convertGenesis a)
-    Right a -> ComponentBlockMain (Some $ a ^. gbHeader) (fnc a)
+    Left genBlock   -> ComponentBlockGenesis (convertGenesis genBlock)
+    Right mainBlock -> ComponentBlockMain (Some $ mainBlock ^. gbHeader) (fnc mainBlock)
 
 toTxpBlock
     :: HasConfiguration
@@ -246,12 +246,6 @@ toTxpBlund
     :: HasConfiguration
     => Blund -> TxpBlund
 toTxpBlund = bimap toTxpBlock undoTx
-
--- [CSL-1156] Sure, totally need something more elegant.
--- toUpdateBlock
---     :: HasConfiguration
---     => Block -> UpdateBlock
--- toUpdateBlock = bimap convertGenesis (convertMain mbUpdatePayload)
 
 -- [CSL-1156] Totally need something more elegant.
 toSscBlock

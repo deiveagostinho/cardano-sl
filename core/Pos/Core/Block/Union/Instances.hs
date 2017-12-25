@@ -19,6 +19,7 @@ import           Pos.Core.Block.Union.Types (Block, BlockHeader, ComponentBlock 
 import           Pos.Core.Class (HasBlockVersion (..), HasDifficulty (..), HasEpochIndex,
                                  HasEpochOrSlot (..), HasHeaderHash (..), HasPrevBlock (..),
                                  HasSoftwareVersion (..), IsHeader, IsMainHeader (..), epochIndexL)
+import           Pos.Core.Slotting.Types (EpochOrSlot (..))
 
 ----------------------------------------------------------------------------
 -- Buildable
@@ -95,7 +96,8 @@ instance IsMainHeader (ComponentBlock a) where
 ----------------------------------------------------------------------------
 
 instance HasEpochOrSlot (ComponentBlock a) where
-    getEpochOrSlot  = getEpochOrSlot
+    -- getEpochOrSlot (ComponentBlockGenesis a) = EpochOrSlot $ Left a
+    getEpochOrSlot (ComponentBlockMain _ a)  = EpochOrSlot $ Right a
 
 ----------------------------------------------------------------------------
 -- HasPrevBlock
