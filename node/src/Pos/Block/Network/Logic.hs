@@ -46,7 +46,7 @@ import           Pos.Block.Logic            (ClassifyHeaderRes (..),
                                              classifyNewHeader, getHeadersOlderExp,
                                              lcaWithMainChain, verifyAndApplyBlocks)
 import qualified Pos.Block.Logic            as L
-import           Pos.Block.Network.Announce (announceBlock)
+import           Pos.Block.Network.Announce (announceBlock, tempMeasure)
 import           Pos.Block.Network.Types    (MsgGetBlocks (..), MsgGetHeaders (..),
                                              MsgHeaders (..))
 import           Pos.Block.Pure             (verifyHeaders)
@@ -59,9 +59,8 @@ import           Pos.Communication.Protocol (Conversation (..), ConversationActi
 import           Pos.Context                (BlockRetrievalQueueTag, LastKnownHeaderTag,
                                              recoveryCommGuard, recoveryInProgress)
 import           Pos.Core                   (HasConfiguration, HasHeaderHash (..),
-                                             HeaderHash, gbHeader, headerHashG,
-                                             isMoreDifficult, prevBlockL,
-                                             criticalForkThreshold)
+                                             HeaderHash, criticalForkThreshold, gbHeader,
+                                             headerHashG, isMoreDifficult, prevBlockL)
 import           Pos.Crypto                 (shortHashF)
 import           Pos.DB.Block               (blkGetHeader)
 import qualified Pos.DB.DB                  as DB
@@ -229,7 +228,9 @@ data MatchReqHeadersRes
     | MRUnexpected Text
       -- ^ Headers don't represent valid response to our
       -- request. Reason is attached.
-    deriving (Show)
+    deriving (Show, Generic)
+
+instance NFData MatchReqHeadersRes
 
 -- TODO This function is used ONLY in recovery mode, so passing the
 -- flag is redundant, it's always True.
@@ -271,8 +272,9 @@ requestHeaders
     -> m ()
 requestHeaders cont mgh nodeId conv = do
     logDebug $ sformat ("requestHeaders: sending "%build) mgh
-    send conv mgh
-    mHeaders <- recvLimited conv
+    mHeaders <- tempMeasure "sendReceiveHeaders" $ do
+        send conv mgh
+        recvLimited conv
     inRecovery <- recoveryInProgress
     -- TODO: it's very suspicious to see False here as requestHeaders
     -- is only called when we're in recovery mode.
@@ -297,7 +299,8 @@ requestHeaders cont mgh nodeId conv = do
                 (unitBuilder $ biSize headers)
                 nodeId
                 (map headerHash headers)
-            case matchRequestedHeaders headers mgh inRecovery of
+            tempMeasure "matchRequestedHeaders"
+              (pure $ force $ matchRequestedHeaders headers mgh inRecovery) >>= \case
                 MRGood           ->
                     handleRequestedHeaders cont inRecovery headers
                 MRUnexpected msg ->
@@ -323,7 +326,7 @@ handleRequestedHeaders
     -> NewestFirst NE (BlockHeader ssc)
     -> m ()
 handleRequestedHeaders cont inRecovery headers = do
-    classificationRes <- classifyHeaders inRecovery headers
+    classificationRes <- tempMeasure "classifyHeaders" $ classifyHeaders inRecovery headers
     let newestHeader = headers ^. _Wrapped . _neHead
         newestHash = headerHash newestHeader
         oldestHash = headerHash $ headers ^. _Wrapped . _neLast

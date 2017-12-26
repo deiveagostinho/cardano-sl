@@ -28,7 +28,7 @@ import           Pos.Binary.Class           (biSize)
 import           Pos.Binary.Communication   ()
 import           Pos.Block.Core             (Block, BlockHeader, blockHeader)
 import           Pos.Block.Logic            (ClassifyHeaderRes (..), classifyNewHeader)
-import           Pos.Block.Network.Announce (announceBlockOuts)
+import           Pos.Block.Network.Announce (announceBlockOuts, tempMeasure)
 import           Pos.Block.Network.Logic    (BlockNetLogicException (DialogUnexpected),
                                              MkHeadersRequestResult (..), handleBlocks,
                                              mkBlocksRequest, mkHeadersRequest,
@@ -46,8 +46,8 @@ import           Pos.Core                   (HasHeaderHash (..), HeaderHash, dif
                                              isMoreDifficult, prevBlockL)
 import           Pos.Crypto                 (shortHashF)
 import           Pos.Reporting              (reportOrLogE, reportOrLogW)
-import           Pos.Slotting.Util          (getCurrentEpochSlotDuration)
 import           Pos.Shutdown               (runIfNotShutdown)
+import           Pos.Slotting.Util          (getCurrentEpochSlotDuration)
 import           Pos.Ssc.Class              (SscWorkersClass)
 import           Pos.Util                   (_neHead, _neLast)
 import           Pos.Util.Chrono            (NE, NewestFirst (..), OldestFirst (..),
@@ -107,7 +107,7 @@ retrievalWorkerImpl keepAliveTimer SendActions {..} =
         slotDuration <- fromIntegral . toMicroseconds <$> getCurrentEpochSlotDuration
         setTimerDuration keepAliveTimer $ 3 * slotDuration
         startTimer keepAliveTimer
-        thingToDoNext
+        tempMeasure "mainLoopGeneral" thingToDoNext
         mainLoop
     mainLoopE e = do
         -- REPORT:ERROR 'reportOrLogE' in block retrieval worker.
@@ -125,14 +125,14 @@ retrievalWorkerImpl keepAliveTimer SendActions {..} =
         processContHeader enqueueMsg nodeId header
     handleAlternative nodeId header = do
         logDebug $ "handleAlternative: " <> pretty header
-        mhrr <- mkHeadersRequest (headerHash header)
+        mhrr <- tempMeasure "createHeadersRequest" $ mkHeadersRequest (headerHash header)
         case mhrr of
             MhrrBlockAdopted ->
                 logDebug "Block already adopted, nothing to be done"
             MhrrWithCheckpoints mgh -> do
                 logDebug "Checkpoints available, headers request assembled"
                 handleHeadersRequest nodeId header mgh
-    handleHeadersRequest nodeId header mgh = do
+    handleHeadersRequest nodeId header mgh = tempMeasure "handleHeadersRequest" $ do
         updateRecoveryHeader nodeId header
         let cont (headers :: NewestFirst NE (BlockHeader ssc)) =
                 let oldestHeader = headers ^. _NewestFirst . _neLast
@@ -294,7 +294,7 @@ handleCHsValid
     -> BlockHeader ssc
     -> HeaderHash
     -> m ()
-handleCHsValid enqueue nodeId lcaChild newestHash = do
+handleCHsValid enqueue nodeId lcaChild newestHash = tempMeasure "handleCHsValid" $ do
     -- The conversation will attempt to retrieve the necessary blocks and apply
     -- them. Each one gives a 'Bool' where 'True' means that a recovery was
     -- completed (depends upon the state of the recovery-mode TMVar).
@@ -321,7 +321,7 @@ handleCHsValid enqueue nodeId lcaChild newestHash = do
                     (blocks ^. _OldestFirst . to NE.length)
                     (unitBuilder $ biSize blocks)
                     (map (headerHash . view blockHeader) blocks)
-                handleBlocks nodeId blocks enqueue
+                tempMeasure "handleBlocks" $ handleBlocks nodeId blocks enqueue
                 dropUpdateHeader
                 -- If we've downloaded any block with bigger
                 -- difficulty than ncrecoveryheader, we're
