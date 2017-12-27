@@ -36,10 +36,10 @@ import           Pos.Block.BListener (MonadBListener)
 import           Pos.Block.Slog (BypassSecurityCheck (..), MonadSlogApply, MonadSlogBase,
                                  ShouldCallBListener, slogApplyBlocks, slogRollbackBlocks)
 import           Pos.Block.Types (Blund, Undo (undoDlg, undoTx, undoUS))
-import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, IsMainHeader,
-                           UpdateBlock, epochIndexL, gbBody, gbHeader, headerHash,
+import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, UpdateBlock,
+                           epochIndexL, gbHeader, headerHash, mainBlockDlgPayload,
                            mainBlockSscPayload, mainBlockTxPayload, mainBlockUpdatePayload)
-import           Pos.Core.Block (Block, Body, GenesisBlock, MainBlock, MainBlockchain, mbDlgPayload)
+import           Pos.Core.Block (Block, GenesisBlock, MainBlock)
 import           Pos.DB (MonadDB, MonadDBRead, MonadGState, SomeBatchOp (..))
 import qualified Pos.DB.GState.Common as GS (writeBatchGState)
 import           Pos.Delegation.Class (MonadDelegation)
@@ -260,14 +260,7 @@ toDlgBlund = bimap toDlgBlock undoDlg
     toDlgBlock
         :: HasConfiguration
         => Block -> DlgBlock
-    toDlgBlock = bimap convertGenesis (convertMain mbDlgPayload)
+    toDlgBlock = toComponentBlock (view mainBlockDlgPayload)
 
 convertGenesis :: HasConfiguration => GenesisBlock -> Some IsGenesisHeader
 convertGenesis = Some . view gbHeader
-
-convertMain
-    :: HasConfiguration
-    => Lens' (Body MainBlockchain) a
-    -> MainBlock
-    -> (Some IsMainHeader, a)
-convertMain payload blk = (Some $ blk ^. gbHeader, blk ^. gbBody . payload)
