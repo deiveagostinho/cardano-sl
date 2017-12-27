@@ -65,6 +65,7 @@ import           Pos.Crypto (Hash, PublicKey, Signature, hash, shortHashF)
 import           Pos.Data.Attributes (Attributes, areAttributesKnown)
 import           Pos.Util.Orphans ()
 
+
 ----------------------------------------------------------------------------
 -- Version
 ----------------------------------------------------------------------------

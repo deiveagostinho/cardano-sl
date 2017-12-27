@@ -61,6 +61,8 @@ instance HasDifficulty Block where
 
 instance HasDifficulty (ComponentBlock a) where
     difficultyL = difficultyL
+    -- difficultyL (ComponentBlockMain a _)  = a ^. mainHeaderDifficulty -- a ^. mainHeaderDifficulty
+    -- difficultyL (ComponentBlockGenesis a) = _  -- a ^. mainHeaderDifficulty
 
 ----------------------------------------------------------------------------
 -- IsHeader

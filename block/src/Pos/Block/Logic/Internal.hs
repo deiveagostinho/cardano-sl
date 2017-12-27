@@ -36,9 +36,9 @@ import           Pos.Block.BListener (MonadBListener)
 import           Pos.Block.Slog (BypassSecurityCheck (..), MonadSlogApply, MonadSlogBase,
                                  ShouldCallBListener, slogApplyBlocks, slogRollbackBlocks)
 import           Pos.Block.Types (Blund, Undo (undoDlg, undoTx, undoUS))
-import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, UpdateBlock,
-                           epochIndexL, gbHeader, headerHash, mainBlockDlgPayload,
-                           mainBlockSscPayload, mainBlockTxPayload, mainBlockUpdatePayload)
+import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, epochIndexL,
+                           gbHeader, headerHash, mainBlockDlgPayload, mainBlockSscPayload,
+                           mainBlockTxPayload, mainBlockUpdatePayload)
 import           Pos.Core.Block (Block, GenesisBlock, MainBlock)
 import           Pos.DB (MonadDB, MonadDBRead, MonadGState, SomeBatchOp (..))
 import qualified Pos.DB.GState.Common as GS (writeBatchGState)
@@ -55,6 +55,7 @@ import           Pos.Ssc.Mem (MonadSscMem)
 import           Pos.Ssc.Types (SscBlock)
 import           Pos.Txp.MemState (MonadTxpLocal (..))
 import           Pos.Txp.Settings (TxpBlock, TxpBlund, TxpGlobalSettings (..))
+import           Pos.Update (UpdateBlock)
 import           Pos.Update.Context (UpdateContext)
 import           Pos.Update.Logic (usApplyBlocks, usNormalize, usRollbackBlocks)
 import           Pos.Update.Poll (PollModifier)
@@ -240,7 +241,6 @@ toUpdateBlock
     => Block -> UpdateBlock
 toUpdateBlock = toComponentBlock (view mainBlockUpdatePayload)
 
--- [CSL-1156] Yes, definitely need something more elegant.
 toTxpBlund
     :: HasConfiguration
     => Blund -> TxpBlund
@@ -251,7 +251,6 @@ toSscBlock
     => Block -> SscBlock
 toSscBlock = toComponentBlock (view mainBlockSscPayload)
 
--- [CSL-1156] Absolutely need something more elegant.
 toDlgBlund
     :: HasConfiguration
     => Blund -> DlgBlund

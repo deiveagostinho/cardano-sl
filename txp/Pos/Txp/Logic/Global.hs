@@ -21,9 +21,10 @@ import           Universum
 import           Pos.Core.Block.Union (ComponentBlock (..))
 import           Pos.Core.Class (epochIndexL)
 import           Pos.Core.Configuration (HasConfiguration)
-import           Pos.Core.Txp (TxAux, TxUndo, TxpUndo)
+import           Pos.Core.Txp (TxAux, TxPayload (..), TxUndo, TxpUndo)
 import           Pos.DB (MonadDBRead, SomeBatchOp (..))
 import           Pos.Exception (assertionFailed)
+import           Pos.Merkle (MerkleTree (..))
 import           Pos.Txp.Base (flattenTxPayload)
 import qualified Pos.Txp.DB as DB
 import           Pos.Txp.Settings.Global (TxpBlock, TxpBlund, TxpGlobalApplyMode,
@@ -35,7 +36,6 @@ import           Pos.Txp.Toil (DBToil, GenericToilModifier (..), GlobalApplyToil
 import           Pos.Util.AssertMode (inAssertMode)
 import           Pos.Util.Chrono (NE, NewestFirst (..), OldestFirst (..))
 import qualified Pos.Util.Modifier as MM
-
 
 -- | Settings used for global transactions data processing used by a
 -- simple full node.
@@ -57,7 +57,8 @@ verifyBlocks verifyAllIsKnown newChain = do
   where
     verifyDo epoch = verifyToil epoch verifyAllIsKnown . convertPayload
     convertPayload :: TxpBlock -> [TxAux]
-    convertPayload payload = flattenTxPayload (bcmPayload payload)
+    convertPayload (ComponentBlockMain _ payload) = flattenTxPayload payload
+    convertPayload (ComponentBlockGenesis _ )     = flattenTxPayload $ UnsafeTxPayload MerkleEmpty []
 
 data ApplyBlocksSettings extra m = ApplyBlocksSettings
     { absApplySingle     :: TxpBlund -> m ()

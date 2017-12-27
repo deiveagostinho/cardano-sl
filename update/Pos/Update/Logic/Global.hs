@@ -16,10 +16,9 @@ import           Data.Default (Default (def))
 import           System.Wlog (WithLogger, modifyLoggerName)
 
 import           Pos.Core (ApplicationName, BlockVersion, ComponentBlock (..), HasConfiguration,
-                           NumSoftwareVersion, SoftwareVersion (..), StakeholderId, UpdateBlock,
-                           addressHash, blockVersionL, epochIndexL, headerHashG, headerLeaderKeyL,
-                           headerSlotL)
-import           Pos.Core.Update (BlockVersionData, UpId)
+                           NumSoftwareVersion, SoftwareVersion (..), StakeholderId, addressHash,
+                           blockVersionL, epochIndexL, headerHashG, headerLeaderKeyL, headerSlotL)
+import           Pos.Core.Update (BlockVersionData, UpId, UpdatePayload)
 import qualified Pos.DB.BatchOp as DB
 import qualified Pos.DB.Class as DB
 import           Pos.Exception (reportFatalError)
@@ -37,6 +36,12 @@ import           Pos.Update.Poll (BlockVersionState, ConfirmedProposalState, Mon
 import           Pos.Util.AssertMode (inAssertMode)
 import           Pos.Util.Chrono (NE, NewestFirst, OldestFirst)
 import qualified Pos.Util.Modifier as MM
+
+----------------------------------------------------------------------------
+-- UpdateBlock
+----------------------------------------------------------------------------
+
+type UpdateBlock = ComponentBlock UpdatePayload
 
 ----------------------------------------------------------------------------
 -- Constraints

@@ -224,7 +224,10 @@ sscRollbackU
 sscRollbackU blocks = tossToUpdate $ rollbackSsc oldestEOS payloads
   where
     oldestEOS = blocks ^. _Wrapped . _neLast . epochOrSlotG
-    payloads = over _Wrapped toList blocks
+    payloads = NewestFirst $ map bcmPayload $ toList blocks
+    -- payloads = case toList blocks of
+    --     [ComponentBlockMain _ a]  -> NewestFirst $ map bcmPayload $ toList blocks
+    --     [ComponentBlockGenesis _] -> NewestFirst $ _ -- ???
 
 ----------------------------------------------------------------------------
 -- Utilities

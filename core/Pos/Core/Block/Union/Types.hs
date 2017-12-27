@@ -4,7 +4,6 @@ module Pos.Core.Block.Union.Types
        ( BlockHeader
        , Block
        , ComponentBlock (..)
-       , UpdateBlock
 
        , blockHeaderHash
 
@@ -21,8 +20,8 @@ import           Pos.Crypto (unsafeHash)
 import           Pos.Core.Block.Genesis.Types
 import           Pos.Core.Block.Main.Types
 import           Pos.Core.Class (IsGenesisHeader, IsMainHeader (..))
-import           Pos.Core.Update.Types (UpdatePayload)
 import           Pos.Util.Some (Some)
+
 ----------------------------------------------------------------------------
 -- GenesisBlock ∪ MainBlock
 ----------------------------------------------------------------------------
@@ -39,8 +38,6 @@ data ComponentBlock payload =
     | ComponentBlockMain
        { bcmHeader  :: !(Some IsMainHeader)
        , bcmPayload :: !payload }
-
-type UpdateBlock = ComponentBlock UpdatePayload
 
 -- | This function is required because type inference fails in attempts to
 -- hash only @Right@ or @Left@.

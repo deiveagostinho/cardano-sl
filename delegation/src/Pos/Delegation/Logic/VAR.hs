@@ -442,7 +442,7 @@ dlgApplyBlocks dlgBlunds = do
     applyBlock ((ComponentBlockMain header block), _) = do
         -- for main blocks we can get psks directly from the block,
         -- though it's duplicated in the undo.
-        let proxySKs = getDlgPayload $ block
+        let proxySKs = getDlgPayload block
             issuers = map pskIssuerPk proxySKs
             edgeActions = map pskToDlgEdgeAction proxySKs
             postedThisEpoch = SomeBatchOp $ map (GS.AddPostedThisEpoch . addressHash) issuers
