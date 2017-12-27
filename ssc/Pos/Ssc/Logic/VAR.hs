@@ -223,7 +223,7 @@ sscRollbackU
   => NewestFirst NE SscBlock -> SscGlobalUpdate ()
 sscRollbackU blocks = tossToUpdate $ rollbackSsc oldestEOS payloads
   where
-    oldestEOS = blocks ^. _Wrapped . epochOrSlotG
+    oldestEOS = blocks ^. _Wrapped . _neLast . epochOrSlotG
     payloads = over _Wrapped toList blocks
 
 ----------------------------------------------------------------------------

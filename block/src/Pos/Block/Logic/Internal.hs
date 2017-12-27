@@ -38,9 +38,8 @@ import           Pos.Block.Slog (BypassSecurityCheck (..), MonadSlogApply, Monad
 import           Pos.Block.Types (Blund, Undo (undoDlg, undoTx, undoUS))
 import           Pos.Core (ComponentBlock (..), HasConfiguration, IsGenesisHeader, IsMainHeader,
                            UpdateBlock, epochIndexL, gbBody, gbHeader, headerHash,
-                           mainBlockTxPayload, mainBlockUpdatePayload)
-import           Pos.Core.Block (Block, Body, GenesisBlock, MainBlock, MainBlockchain, mbDlgPayload,
-                                 mbSscPayload)
+                           mainBlockSscPayload, mainBlockTxPayload, mainBlockUpdatePayload)
+import           Pos.Core.Block (Block, Body, GenesisBlock, MainBlock, MainBlockchain, mbDlgPayload)
 import           Pos.DB (MonadDB, MonadDBRead, MonadGState, SomeBatchOp (..))
 import qualified Pos.DB.GState.Common as GS (writeBatchGState)
 import           Pos.Delegation.Class (MonadDelegation)
@@ -247,11 +246,10 @@ toTxpBlund
     => Blund -> TxpBlund
 toTxpBlund = bimap toTxpBlock undoTx
 
--- [CSL-1156] Totally need something more elegant.
 toSscBlock
     :: HasConfiguration
     => Block -> SscBlock
-toSscBlock = bimap convertGenesis (convertMain mbSscPayload)
+toSscBlock = toComponentBlock (view mainBlockSscPayload)
 
 -- [CSL-1156] Absolutely need something more elegant.
 toDlgBlund

@@ -14,11 +14,12 @@ import           Pos.Binary.Class (Bi)
 import           Pos.Core.Block.Blockchain (GenericBlock (..))
 import           Pos.Core.Block.Genesis ()
 import           Pos.Core.Block.Main ()
+-- import           Pos.Core.Block.Main.Lens (mainBlockSlot)
 import           Pos.Core.Block.Union.Types (Block, BlockHeader, ComponentBlock (..),
                                              blockHeaderHash)
 import           Pos.Core.Class (HasBlockVersion (..), HasDifficulty (..), HasEpochIndex,
                                  HasEpochOrSlot (..), HasHeaderHash (..), HasPrevBlock (..),
-                                 HasSoftwareVersion (..), IsHeader, IsMainHeader (..), epochIndexL)
+                                 HasSoftwareVersion (..), IsHeader, epochIndexL, headerSlotL)
 import           Pos.Core.Slotting.Types (EpochOrSlot (..))
 
 ----------------------------------------------------------------------------
@@ -66,7 +67,7 @@ instance HasDifficulty (ComponentBlock a) where
 ----------------------------------------------------------------------------
 
 instance Bi BlockHeader  => IsHeader BlockHeader
-instance IsHeader (ComponentBlock a)
+-- instance IsHeader (ComponentBlock a)
 
 ----------------------------------------------------------------------------
 -- HasEpochIndex
@@ -87,17 +88,19 @@ instance HasEpochIndex (ComponentBlock a) where
 -- IsMainHeader
 ----------------------------------------------------------------------------
 
-instance IsMainHeader (ComponentBlock a) where
-    headerSlotL = headerSlotL
-    headerLeaderKeyL = headerLeaderKeyL
+-- instance IsMainHeader (ComponentBlock a) where
+--     headerSlotL = headerSlotL
+--     headerLeaderKeyL = headerLeaderKeyL
+
+-- instance IsGenesisHeader (ComponentBlock a)
 
 ----------------------------------------------------------------------------
 -- HasEpochOrSlot
 ----------------------------------------------------------------------------
 
 instance HasEpochOrSlot (ComponentBlock a) where
-    -- getEpochOrSlot (ComponentBlockGenesis a) = EpochOrSlot $ Left a
-    getEpochOrSlot (ComponentBlockMain _ a)  = EpochOrSlot $ Right a
+    getEpochOrSlot (ComponentBlockMain a _)  = EpochOrSlot $ Right $ a ^. headerSlotL
+    getEpochOrSlot (ComponentBlockGenesis a) = EpochOrSlot $ Left $ a ^. epochIndexL
 
 ----------------------------------------------------------------------------
 -- HasPrevBlock
