@@ -55,6 +55,9 @@ import           Serokell.Util            (listJson)
 
 import           Pos.Binary               (biSize)
 import           Pos.Client.Txp.Addresses (MonadAddresses (..))
+import           Pos.Configuration        (HasNodeConfiguration,
+                                           InputSelectionPolicyConf (..),
+                                           txDefInputSelectionPolicy)
 import           Pos.Core                 (TxFeePolicy (..), TxSizeLinear (..),
                                            bvdTxFeePolicy, calculateTxSizeLinear,
                                            coinToInteger, integerToCoin, isRedeemAddress,
@@ -161,8 +164,12 @@ instance Buildable InputSelectionPolicy where
 instance Buildable (SecureLog InputSelectionPolicy) where
     build = buildUnsecure
 
-instance Default InputSelectionPolicy where
-    def = OptimizeForSecurity
+instance HasNodeConfiguration => Default InputSelectionPolicy where
+    def = inputSelectionPolicyFromConf txDefInputSelectionPolicy
+
+inputSelectionPolicyFromConf :: InputSelectionPolicyConf -> InputSelectionPolicy
+inputSelectionPolicyFromConf OptimizeForSecurityConf = OptimizeForSecurity
+inputSelectionPolicyFromConf OptimizeForSizeConf     = OptimizeForSize
 
 -- | Mode for creating transactions. We need to know fee policy.
 type TxDistrMode m
